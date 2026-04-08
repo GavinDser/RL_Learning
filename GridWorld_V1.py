@@ -6,6 +6,9 @@ class GridWorld_v1(object):
     #gridworld version 1 for deterministic policy iteration and value iteration
     #randommize forbidden area and target area if wanted
     
+    #records the state index map
+    stateMap = None
+    #records the reward map
     scoreMap = None
     
     targetAreaVal = 0
@@ -25,11 +28,12 @@ class GridWorld_v1(object):
             for i in range(self.rows):
                 temp = []
                 for j in range(self.columns):
-                    # "x" is for forbidden area, "!" is for target area, other position is "0"
+                    # "x" is for forbidden area, "!" is for target area, other position is "."
                     temp.append(forbiddenAreaVal if fixed[i][j] == "x" else targetAreaVal if fixed[i][j] == "!" else 0)
                 m.append(temp)
             
             self.scoreMap = np.array(m)
+            self.stateMap = [[i*self.columns+j for j in range(self.columns)] for i in range(self.rows)]
             return
             
             
@@ -57,6 +61,7 @@ class GridWorld_v1(object):
                 m[randomPos[i]] = self.forbiddenAreaVal
             
         self.scoreMap = np.array(m).reshape(self.rows,self.columns)
+        self.stateMap = [[i*self.columns+j for j in range(self.columns)] for i in range(self.rows)]
         
         
             
@@ -71,3 +76,55 @@ class GridWorld_v1(object):
                 l = l+tmp[self.scoreMap[i][j]]
             print(l)
                 
+                
+    #Includes 5 action, from 0 to 4
+    #a0:up
+    #a1:right
+    #a2:down
+    #a3:left
+    #a4:stay
+    def step(self, currentState, action):
+        currentX = currentState // self.columns
+        currentY = currentState % self.columns
+        
+        if (currentX < 0 or currentY < 0 or currentX >= self.rows or currentY >= self.columns):
+            print(f"Coordinate Error: ({currentX},{currentY})")
+        if (action<0 or action > 4):
+            print(f"Wrong action: {action}")
+        
+        
+        actionList = [(-1,0),(0,1),(1,0),(0,-1),(0,0)]
+        tempX = currentX + actionList[action][0]
+        tempY = currentY + actionList[action][1]
+        
+        #check for outbounds
+        if (tempX < 0 or tempX >= self.rows or tempY < 0 or tempY >= self.columns):
+            return -1, currentState
+        
+        #return immediate reward and next state
+        return self.scoreMap[tempX][tempY], self.stateMap[tempX][tempY]
+    
+    
+    
+    
+    def show_policy(self, policy):
+        print("[Policy Map]")
+        rows = self.rows
+        columns = self.columns
+        s = ""
+        
+        for i in range(self.rows * self.columns):
+            currentX = i // columns
+            currentY = i % columns
+            
+            if(self.scoreMap[currentX][currentY] == self.targetAreaVal):
+                s = s + "✅"
+            if(self.scoreMap[currentX][currentY]==0):
+                temp = {0:"⬆️",1:"➡️",2:"⬇️",3:"⬅️",4:"🔄"}
+                s = s + temp[policy[i]]
+            if(self.scoreMap[currentX][currentY]==self.forbiddenAreaVal):
+                temp = {0:"⏫️",1:"⏩️",2:"⏬",3:"⏪",4:"🔄"}
+                s = s + temp[policy[i]]
+            if(currentY == columns-1):
+                print(s)
+                s = ""
