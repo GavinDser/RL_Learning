@@ -128,3 +128,13 @@ class GridWorld_v1(object):
             if(currentY == columns-1):
                 print(s)
                 s = ""
+                
+    def print_value(self, value):
+        print("[value]")
+        l = np.array(value).reshape(self.rows,self.columns)
+        print(l)
+    
+    def print_policy(self, policy):
+        print("[policy]")
+        l = np.array(policy).reshape(self.rows,self.columns)
+        print(l)
